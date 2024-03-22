@@ -74,7 +74,7 @@ RUN source /venv/bin/activate && \
 ARG LLAVA_COMMIT
 RUN git clone https://github.com/ashleykleynhans/LLaVA.git && \
     cd /LLaVA && \
-    git checkout ${LLAVA_COMMIT}
+    git checkout fd3f3d29c418ccfca618cc96a8c3f63302b3bda7
 
 # Install the dependencies for LLaVA
 WORKDIR /LLaVA
@@ -86,11 +86,12 @@ RUN source /venv/bin/activate && \
     pip3 install flash-attn --no-build-isolation && \
     pip3 install transformers==4.37.2 && \
     pip3 install protobuf && \
+    pip3 install flask && \
     deactivate
 
 # Download the default model
 ARG LLAVA_MODEL
-ENV MODEL="${LLAVA_MODEL}"
+ENV MODEL="liuhaotian/llava-v1.6-mistral-7b"
 ENV HF_HOME="/"
 COPY --chmod=755 scripts/download_models.py /download_models.py
 RUN source /venv/bin/activate && \
@@ -98,49 +99,11 @@ RUN source /venv/bin/activate && \
     python3 /download_models.py && \
     deactivate
 
-# Install Jupyter, gdown and OhMyRunPod
-RUN pip3 install -U --no-cache-dir jupyterlab \
-        jupyterlab_widgets \
-        ipykernel \
-        ipywidgets \
-        gdown \
-        OhMyRunPod
-
-# Install RunPod File Uploader
-RUN curl -sSL https://github.com/kodxana/RunPod-FilleUploader/raw/main/scripts/installer.sh -o installer.sh && \
-    chmod +x installer.sh && \
-    ./installer.sh
-
-# Install rclone
-RUN curl https://rclone.org/install.sh | bash
-
-# Install runpodctl
-ARG RUNPODCTL_VERSION
-RUN wget "https://github.com/runpod/runpodctl/releases/download/${RUNPODCTL_VERSION}/runpodctl-linux-amd64" -O runpodctl && \
-    chmod a+x runpodctl && \
-    mv runpodctl /usr/local/bin
-
-# Install croc
-RUN curl https://getcroc.schollz.com | bash
-
-# Install speedtest CLI
-RUN curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash && \
-    apt -y install speedtest
-
-# Remove existing SSH host keys
-RUN rm -f /etc/ssh/ssh_host_*
-
 # NGINX Proxy
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/502.html /usr/share/nginx/html/502.html
 
-# Set template version
-ARG RELEASE
-ENV TEMPLATE_VERSION=${RELEASE}
 
-# Set the venv path
-ARG VENV_PATH
-ENV VENV_PATH=${VENV_PATH}
 
 # Copy the scripts
 WORKDIR /
@@ -148,4 +111,4 @@ COPY --chmod=755 scripts/* ./
 
 # Start the container
 SHELL ["/bin/bash", "--login", "-c"]
-CMD [ "/start.sh" ]
+CMD ["source /venv/bin/activate && python -m llava.serve.api -H 0.0.0.0 -p 5000"]
