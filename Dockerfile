@@ -67,7 +67,6 @@ ARG TORCH_VERSION
 ARG XFORMERS_VERSION
 RUN source /venv/bin/activate && \
     pip3 install --no-cache-dir torch==2.1.2 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
-    pip3 install --no-cache-dir xformers==0.0.23.post1+cu118 --index-url https://download.pytorch.org/whl/cu118 && \
     deactivate
 
 # Clone the git repo of LLaVA and set version
