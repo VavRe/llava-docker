@@ -62,9 +62,6 @@ WORKDIR /
 RUN python3 -m venv /venv
 
 # Install Torch
-ARG INDEX_URL
-ARG TORCH_VERSION
-ARG XFORMERS_VERSION
 RUN source /venv/bin/activate && \
     pip3 install --no-cache-dir torch==2.1.2 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
     deactivate
